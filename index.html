@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mi Tienda Turbo</title>
+    <style>
+        /* --- ESTILOS GENERALES --- */
+        * { box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; background-color: #eceff1; padding-bottom: 110px; overflow-x: hidden; width: 100%; }
+        
+        /* HEADER NEGRO FIJO */
+        .header { background-color: #000000; color: white; padding: 15px 15px 5px 15px; position: sticky; top: 0; z-index: 1000; box-shadow: 0 4px 8px rgba(0,0,0,0.5); width: 100%; }
+        .header-content { max-width: 600px; margin: 0 auto; }
+
+        .top-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .app-title { font-weight: bold; font-size: 1.3em; color: #fff; letter-spacing: 1px; }
+        
+        .tasa-container { background: #333; padding: 5px 10px; border-radius: 8px; display: flex; align-items: center; gap: 5px; border: 1px solid #555; }
+        .tasa-input { background: transparent; border: none; color: #00e676; font-weight: bold; font-size: 1.1em; width: 55px; text-align: center; outline: none; }
+        
+        .search-box { width: 100%; padding: 12px; border-radius: 8px; border: none; outline: none; font-size: 16px; background: #fff; margin-bottom: 10px; }
+
+        /* BARRA DE CATEGORÍAS */
+        .cat-scroll { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; scrollbar-width: none; white-space: nowrap; }
+        .cat-scroll::-webkit-scrollbar { display: none; } 
+        .cat-chip { background: #333; color: #e0e0e0; padding: 6px 15px; border-radius: 20px; font-size: 0.9em; border: 1px solid #555; cursor: pointer; transition: background 0.2s; }
+        .cat-chip.active { background: #0288d1; color: white; border-color: #0288d1; font-weight: bold; }
+
+        /* CONTENEDOR PRINCIPAL */
+        .container { padding: 10px; max-width: 600px; margin: 0 auto; width: 100%; }
+        .section-title { padding: 15px 5px 5px 5px; font-weight: bold; color: #546e7a; font-size: 0.9em; text-transform: uppercase; display: none; } /* Oculto por defecto en modo turbo */
+        .section-title.visible { display: block; }
+
+        /* TARJETAS */
+        .card { background: white; border-radius: 12px; padding: 12px; margin-bottom: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; flex-direction: column; gap: 8px; transform: translateZ(0); /* Acelerar GPU */ }
+        
+        /* CLASE PARA OCULTAR RAPIDO */
+        .card.hidden { display: none !important; }
+        
+        .card.active-item { border: 2px solid #0288d1; background-color: #e1f5fe; order: -1; } /* Order -1 sube los items al inicio flex */
+
+        /* FLEX ORDERING GROUP: Para simular las secciones visualmente */
+        /* Usaremos un truco: el contenedor será Flex Column. Los items comprados tienen order: -10. */
+        #mainContainer { display: flex; flex-direction: column; }
+
+        .card-top { display: flex; gap: 12px; }
+        .img-box { width: 75px; height: 75px; background: #cfd8dc; border-radius: 8px; object-fit: cover; flex-shrink: 0; border: 1px solid #ddd; cursor: zoom-in; }
+        
+        .info { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+        .title { font-weight: bold; font-size: 1.1em; color: #263238; line-height: 1.2; }
+        
+        .tags-row { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+        .category-tag { font-size: 0.7em; background: #eceff1; color: #455a64; padding: 2px 6px; border-radius: 4px; font-weight: bold; border: 1px solid #cfd8dc; }
+        .car-tag { font-size: 0.7em; background: #fff3e0; color: #e65100; padding: 2px 6px; border-radius: 4px; border: 1px solid #ffe0b2; }
+
+        .price { color: #0288d1; font-weight: bold; font-size: 1em; margin-top: 4px; }
+        
+        .card-actions { display: flex; flex-direction: column; justify-content: space-between; align-items: center; gap: 5px; }
+        .btn-icon { background: none; border: none; font-size: 1.2em; cursor: pointer; padding: 5px; opacity: 0.6; }
+
+        .card-controls { display: flex; align-items: center; justify-content: space-between; background: #f5f5f5; padding: 8px; border-radius: 8px; margin-top: 5px; }
+        .card.active-item .card-controls { background: #b3e5fc; }
+        .qty-input { width: 50px; padding: 8px; border: 1px solid #b0bec5; border-radius: 6px; text-align: center; font-size: 1.2em; font-weight: bold; background: white; }
+        .row-total { font-size: 0.9em; text-align: right; color: #546e7a; font-weight: bold; line-height: 1.2; }
+        .row-total.active { color: #2e7d32; }
+
+        /* BARRA INFERIOR */
+        .total-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: #111; color: white; padding: 12px 0; z-index: 2000; box-shadow: 0 -4px 10px rgba(0,0,0,0.3); }
+        .total-content { display: flex; justify-content: space-between; align-items: center; max-width: 600px; margin: 0 auto; padding: 0 20px; width: 100%; }
+        .gran-total-usd { font-size: 1.3em; font-weight: bold; color: #fff; }
+        .gran-total-bs { font-size: 0.9em; color: #00e676; }
+        .btn-clean { background: #c62828; color: white; border: none; padding: 8px 12px; border-radius: 6px; font-weight: bold; font-size: 0.8em; }
+
+        .fab { position: fixed; bottom: 90px; right: 20px; width: 56px; height: 56px; background-color: #0288d1; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; box-shadow: 0 4px 12px rgba(0,2,136,0.4); cursor: pointer; z-index: 1500; border: none; }
+
+        .modal, .modal-zoom { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 3000; align-items: center; justify-content: center; backdrop-filter: blur(3px); }
+        .modal-content { background: white; padding: 20px; border-radius: 12px; width: 85%; max-width: 350px; display: flex; flex-direction: column; gap: 10px; max-height: 90vh; overflow-y: auto; }
+        .modal input { padding: 10px; border: 1px solid #cfd8dc; border-radius: 8px; font-size: 16px; width: 100%; }
+        .label-input { font-size: 0.85em; font-weight: bold; color: #546e7a; margin-bottom: -5px; margin-top: 5px; }
+        .modal-btns { display: flex; gap: 10px; margin-top: 15px; }
+        .btn { flex: 1; padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 16px; }
+        .btn-save { background: #0288d1; color: white; }
+        .btn-cancel { background: #cfd8dc; color: #37474f; }
+        
+        .zoom-img { max-width: 100%; max-height: 100%; object-fit: contain; }
+        .close-zoom { position: absolute; top: 20px; right: 20px; color: white; font-size: 40px; cursor: pointer; }
+        #previewImg { width: 100px; height: 100px; object-fit: cover; border-radius: 8px; margin-top: 5px; display: none; border: 1px solid #ddd; align-self: center; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-content">
+            <div class="top-row">
+                <div class="app-title">Mi Tienda</div>
+                <div class="tasa-container">
+                    <span>Bs.</span>
+                    <input type="number" id="tasaGlobal" class="tasa-input" value="40" oninput="guardarTasa(); actualizarPreciosVisuales()">
+                </div>
+                <div style="font-size:1.5em; cursor:pointer; padding: 0 10px; color:white;" onclick="menuExportar()">⋮</div>
+                <input type="file" id="importInput" style="display: none" onchange="importarDatos(this)">
+            </div>
+            <input type="text" id="buscador" class="search-box" placeholder="🔍 Buscar..." oninput="filtrarRapido()">
+            <div class="cat-scroll" id="catContainer"></div>
+        </div>
+    </div>
+
+    <div id="mainContainer" class="container"></div>
+
+    <div class="total-bar">
+        <div class="total-content">
+            <div class="total-info">
+                <div class="gran-total-usd" id="totalUsd">$0.00</div>
+                <div class="gran-total-bs" id="totalBs">Bs. 0.00</div>
+            </div>
+            <button class="btn-clean" onclick="limpiarTodo()">🗑️ Vaciar</button>
+        </div>
+    </div>
+
+    <button class="fab" onclick="abrirModal()">+</button>
+
+    <div class="modal" id="modalProducto">
+        <div class="modal-content">
+            <h3 style="margin:0; color:#37474f;" id="modalTitle">Producto</h3>
+            <div class="label-input">Nombre:</div>
+            <input type="text" id="inpNombre" placeholder="Ej: Filtro de Aceite">
+            <div class="label-input">Precio ($):</div>
+            <input type="number" id="inpPrecio" placeholder="0.00">
+            <div class="label-input">Categoría:</div>
+            <input type="text" id="inpCategoria" list="listaCategorias" placeholder="Ej: Frenos">
+            <datalist id="listaCategorias"></datalist>
+            <div class="label-input">Vehículos:</div>
+            <input type="text" id="inpVehiculos" placeholder="Ej: Corsa, Aveo...">
+            <div class="label-input">Foto:</div>
+            <input type="file" id="inpImgFile" accept="image/*">
+            <img id="previewImg">
+            <div class="modal-btns">
+                <button class="btn btn-cancel" onclick="cerrarModal()">Cancelar</button>
+                <button class="btn btn-save" id="btnGuardar" onclick="guardarProducto()">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-zoom" id="modalZoom" onclick="cerrarZoom()">
+        <div class="close-zoom">×</div>
+        <img class="zoom-img" id="imgZoomDisplay">
+    </div>
+    <canvas id="canvasCompress" style="display:none;"></canvas>
+    <script>
+        let productos = [];
+        let cantidades = {}; 
+        let tasa = 40;
+        let editId = null;
+        let imgComprimida = ""; 
+        let categoriaActiva = "Todos";
+
+        window.onload = function() {
+            cargarDatos();
+            renderizarCategorias();
+            renderizarInicial(); // PINTA TODO UNA SOLA VEZ
+        };
+
+        function guardarDatos() {
+            try { localStorage.setItem('v8_db', JSON.stringify(productos)); } 
+            catch (e) { alert("⚠️ Memoria llena."); }
+        }
+        function guardarTasa() {
+            tasa = document.getElementById('tasaGlobal').value;
+            localStorage.setItem('v8_tasa', tasa);
+        }
+        function cargarDatos() {
+            const db = localStorage.getItem('v8_db');
+            const t = localStorage.getItem('v8_tasa');
+            if (db) productos = JSON.parse(db);
+            if (t) { tasa = t; document.getElementById('tasaGlobal').value = tasa; }
+            productos.forEach(p => { if(!p.id) p.id = Date.now() + Math.random(); });
+        }
+
+        function renderizarCategorias() {
+            const cats = ["Todos", ...new Set(productos.map(p => p.categoria).filter(Boolean))].sort();
+            const div = document.getElementById('catContainer');
+            div.innerHTML = "";
+            cats.forEach(c => {
+                const btn = document.createElement('div');
+                btn.className = `cat-chip ${c === categoriaActiva ? 'active' : ''}`;
+                btn.innerText = c;
+                btn.onclick = () => { 
+                    categoriaActiva = c; 
+                    renderizarCategorias(); // Actualiza colores botones
+                    filtrarRapido(); // Solo oculta/muestra, no redibuja
+                };
+                div.appendChild(btn);
+            });
+            document.getElementById('listaCategorias').innerHTML = cats.filter(c => c !== "Todos").map(c => `<option value="${c}">`).join('');
+        }
+
+        // --- NUEVO MOTOR DE RENDERIZADO (SIN LAG) ---
+        function renderizarInicial() {
+            const contenedor = document.getElementById('mainContainer');
+            contenedor.innerHTML = '';
+            
+            // Ordenar A-Z antes de pintar
+            productos.sort((a, b) => a.nombre.localeCompare(b.nombre));
+
+            productos.forEach(p => {
+                const imgUrl = p.img ? p.img : 'https://via.placeholder.com/80?text=Foto';
+                const cant = cantidades[p.id] || 0;
+                
+                // Crear elemento DOM real
+                const card = document.createElement('div');
+                card.className = `card ${cant > 0 ? 'active-item' : ''}`;
+                card.id = `card-${p.id}`;
+                card.style.order = cant > 0 ? "-1" : "0"; // CSS Order para mover al inicio
+                
+                // Datos para búsqueda rápida (Dataset)
+                card.dataset.search = (p.nombre + " " + (p.categoria||"") + " " + (p.vehiculos||"")).toLowerCase();
+                card.dataset.cat = p.categoria || "";
+                card.dataset.price = p.precio;
+
+                let tagsHtml = `<div class="tags-row">`;
+                if(p.categoria) tagsHtml += `<span class="category-tag">${p.categoria}</span>`;
+                if(p.vehiculos) tagsHtml += `<span class="car-tag">🚗 ${p.vehiculos}</span>`;
+                tagsHtml += `</div>`;
+
+                card.innerHTML = `
+                    <div class="card-top">
+                        <img src="${imgUrl}" class="img-box" onclick="verFoto('${imgUrl}')" loading="lazy">
+                        <div class="info">
+                            <div class="title">${p.nombre}</div>
+                            ${tagsHtml}
+                            <div class="price">Ref: $<span class="price-val">${parseFloat(p.precio).toFixed(2)}</span></div>
+                        </div>
+                        <div class="card-actions">
+                            <button class="btn-icon" onclick="editar('${p.id}')">✏️</button>
+                            <button class="btn-icon" onclick="borrar('${p.id}')" style="color:#ef5350">🗑️</button>
+                        </div>
+                    </div>
+                    <div class="card-controls">
+                        <div style="font-weight:bold; color:#546e7a">Cant:</div>
+                        <input type="number" class="qty-input" value="${cant > 0 ? cant : ''}" placeholder="0" 
+                               oninput="cambiarCantidad('${p.id}', this.value)">
+                        <div class="row-total ${cant > 0 ? 'active' : ''}" id="total-${p.id}">
+                            ${calcularTextoTotal(cant, p.precio)}
+                        </div>
+                    </div>
+                `;
+                contenedor.appendChild(card);
+            });
+            calcularGranTotal();
+        }
+
+        function filtrarRapido() {
+            const filtro = document.getElementById('buscador').value.toLowerCase();
+            const cards = document.querySelectorAll('.card');
+            
+            cards.forEach(card => {
+                const matchTexto = card.dataset.search.includes(filtro);
+                const matchCat = categoriaActiva === "Todos" || card.dataset.cat === categoriaActiva;
+                
+                if (matchTexto && matchCat) {
+                    card.classList.remove('hidden');
+                } else {
+                    card.classList.add('hidden');
+                }
+            });
+        }
+
+        function actualizarPreciosVisuales() {
+            // Solo actualiza los textos de precios, no redibuja todo
+            tasa = parseFloat(document.getElementById('tasaGlobal').value) || 0;
+            for(let id in cantidades) {
+                const card = document.getElementById(`card-${id}`);
+                if(card) {
+                    const precio = parseFloat(card.dataset.price);
+                    const cant = cantidades[id];
+                    document.getElementById(`total-${id}`).innerHTML = calcularTextoTotal(cant, precio);
+                }
+            }
+            calcularGranTotal();
+        }
+
+        function calcularTextoTotal(cant, precio) {
+            if(!cant || cant <= 0) return "$0.00<br>Bs. 0.00";
+            const tUsd = cant * precio;
+            const tBs = tUsd * tasa;
+            return `$${tUsd.toFixed(2)}<br>Bs. ${tBs.toLocaleString('es-VE', {minimumFractionDigits: 2})}`;
+        }
+
+        function cambiarCantidad(id, valor) {
+            const val = parseFloat(valor) || 0;
+            const card = document.getElementById(`card-${id}`);
+            
+            if (val > 0) {
+                cantidades[id] = val;
+                card.classList.add('active-item');
+                card.style.order = "-1"; // Mover al inicio
+                document.getElementById(`total-${id}`).classList.add('active');
+            } else {
+                delete cantidades[id];
+                card.classList.remove('active-item');
+                card.style.order = "0"; // Volver a su lugar
+                document.getElementById(`total-${id}`).classList.remove('active');
+            }
+            
+            // Actualizar solo texto de esta tarjeta
+            const precio = parseFloat(card.dataset.price);
+            document.getElementById(`total-${id}`).innerHTML = calcularTextoTotal(val, precio);
+            
+            calcularGranTotal();
+        }
+
+        function calcularGranTotal() {
+            let total = 0;
+            for(let id in cantidades) {
+                // Buscar precio en el DOM para no recorrer array gigante
+                const card = document.getElementById(`card-${id}`);
+                if(card) total += parseFloat(card.dataset.price) * cantidades[id];
+            }
+            document.getElementById('totalUsd').innerText = `$${total.toFixed(2)}`;
+            document.getElementById('totalBs').innerText = `Bs. ${ (total * tasa).toLocaleString('es-VE', {minimumFractionDigits: 2}) }`;
+        }
+
+        function limpiarTodo() {
+            if(confirm("¿Vaciar?")) { 
+                cantidades = {}; 
+                renderizarInicial(); // Aquí sí reseteamos todo para limpiar visuales
+            }
+        }
+
+        // --- MODALES Y GUARDADO ---
+        function abrirModal() {
+            editId = null; imgComprimida = "";
+            document.getElementById('modalTitle').innerText = "Nuevo";
+            ['inpNombre', 'inpPrecio', 'inpCategoria', 'inpVehiculos', 'inpImgFile'].forEach(id => document.getElementById(id).value = "");
+            document.getElementById('previewImg').style.display = 'none';
+            document.getElementById('modalProducto').style.display = 'flex';
+        }
+        function editar(id) {
+            const p = productos.find(x => x.id == id); if(!p) return;
+            editId = id; imgComprimida = p.img || "";
+            document.getElementById('modalTitle').innerText = "Editar";
+            document.getElementById('inpNombre').value = p.nombre;
+            document.getElementById('inpPrecio').value = p.precio;
+            document.getElementById('inpCategoria').value = p.categoria || "";
+            document.getElementById('inpVehiculos').value = p.vehiculos || "";
+            document.getElementById('inpImgFile').value = "";
+            const pv = document.getElementById('previewImg');
+            if(imgComprimida && imgComprimida.startsWith("data:")) { pv.src = imgComprimida; pv.style.display = 'block'; } 
+            else { pv.style.display = 'none'; }
+            document.getElementById('modalProducto').style.display = 'flex';
+        }
+        function cerrarModal() { document.getElementById('modalProducto').style.display = 'none'; }
+        function verFoto(url) {
+            if(url.includes("placeholder")) return;
+            document.getElementById('imgZoomDisplay').src = url;
+            document.getElementById('modalZoom').style.display = 'flex';
+        }
+        function cerrarZoom() { document.getElementById('modalZoom').style.display = 'none'; }
+
+        // COMPRESOR
+        document.getElementById('inpImgFile').addEventListener('change', function(e) {
+            const file = e.target.files[0]; if (!file) return;
+            document.getElementById('btnGuardar').innerText = "...";
+            document.getElementById('btnGuardar').disabled = true;
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.getElementById('canvasCompress');
+                    const ctx = canvas.getContext('2d');
+                    const MAX_WIDTH = 500;
+                    const scaleSize = MAX_WIDTH / img.width;
+                    canvas.width = MAX_WIDTH;
+                    canvas.height = img.height * scaleSize;
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    imgComprimida = canvas.toDataURL("image/jpeg", 0.7);
+                    const pv = document.getElementById('previewImg');
+                    pv.src = imgComprimida; pv.style.display = 'block';
+                    document.getElementById('btnGuardar').innerText = "Guardar";
+                    document.getElementById('btnGuardar').disabled = false;
+                }
+                img.src = event.target.result;
+            }
+            reader.readAsDataURL(file);
+        });
+
+        function guardarProducto() {
+            const nombre = document.getElementById('inpNombre').value;
+            const precio = parseFloat(document.getElementById('inpPrecio').value);
+            const cat = document.getElementById('inpCategoria').value; 
+            const veh = document.getElementById('inpVehiculos').value;
+            if (!nombre || isNaN(precio)) { alert("Falta datos"); return; }
+            const imgFinal = imgComprimida || (editId ? productos.find(p=>p.id==editId).img : "") || "";
+            const nuevoItem = { id: editId || Date.now(), nombre, precio, categoria: cat, vehiculos: veh, img: imgFinal };
+            
+            if (editId) {
+                const index = productos.findIndex(p => p.id == editId);
+                if(index !== -1) productos[index] = nuevoItem;
+            } else { productos.push(nuevoItem); }
+
+            guardarDatos(); renderizarCategorias(); cerrarModal(); 
+            renderizarInicial(); // Reconstruir DOM al guardar
+        }
+
+        function borrar(id) {
+            if(confirm("¿Borrar?")) {
+                productos = productos.filter(p => p.id != id);
+                delete cantidades[id];
+                guardarDatos(); renderizarCategorias(); 
+                // Eliminar del DOM directamente sin redibujar todo
+                const card = document.getElementById(`card-${id}`);
+                if(card) card.remove();
+                calcularGranTotal();
+            }
+        }
+
+        function menuExportar() {
+            const op = prompt("1. Exportar\n2. Importar");
+            if(op === "1") {
+                const a = document.createElement('a');
+                a.href = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(productos));
+                a.download = "respuestos_backup.json"; a.click();
+            } else if (op === "2") { document.getElementById('importInput').click(); }
+        }
+        function importarDatos(input) {
+            const file = input.files[0]; if(!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    productos = JSON.parse(e.target.result);
+                    productos.forEach(p => { if(!p.id) p.id = Date.now() + Math.random(); });
+                    guardarDatos(); renderizarCategorias(); renderizarInicial(); alert("✅ Cargado");
+                } catch(err) { alert("❌ Error archivo"); }
+            };
+            reader.readAsText(file);
+        }
+    </script>
+</body>
+</html>
