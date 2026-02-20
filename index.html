@@ -3,438 +3,720 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Mi Tienda Turbo</title>
+    <title>Stocktien V23 (Optimizada)</title>
     <style>
-        /* --- ESTILOS GENERALES --- */
+        /* VARIABLES */
+        :root {
+            --bg-body: #eceff1; --bg-card: #ffffff;
+            --text-main: #000000; --text-sec: #546e7a;
+            --header-bg: #263238; --header-text: #ffffff;
+            --input-bg: #ffffff; --border-color: #cfd8dc;
+            --highlight: #00897b; --highlight-light: #e0f2f1;
+            --danger: #d32f2f; --warn: #ffa000;
+            --box-bg: #f5f5f5;
+            --chip-bg: #cfd8dc; --chip-active: #37474f; --chip-text: #263238;
+        }
+        body.dark-mode {
+            --bg-body: #121212; --bg-card: #1e1e1e;
+            --text-main: #ffffff; --text-sec: #b0bec5;
+            --header-bg: #000000; --input-bg: #2c2c2c;
+            --border-color: #333333; --highlight: #4db6ac; --highlight-light: #263238;
+            --box-bg: #262626;
+            --chip-bg: #333333; --chip-active: #4db6ac; --chip-text: #cfd8dc;
+        }
+
+        /* GENERAL */
         * { box-sizing: border-box; }
-        body { font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; background-color: #eceff1; padding-bottom: 110px; overflow-x: hidden; width: 100%; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; background-color: var(--bg-body); color: var(--text-main); padding-bottom: 120px; width: 100%; overflow-x: hidden; transition: background 0.3s, color 0.3s; }
         
-        /* HEADER NEGRO FIJO */
-        .header { background-color: #000000; color: white; padding: 15px 15px 5px 15px; position: sticky; top: 0; z-index: 1000; box-shadow: 0 4px 8px rgba(0,0,0,0.5); width: 100%; }
-        .header-content { max-width: 600px; margin: 0 auto; }
+        /* HEADER */
+        .header { background-color: var(--header-bg); color: var(--header-text); padding: 10px 15px; position: sticky; top: 0; z-index: 1000; box-shadow: 0 4px 8px rgba(0,0,0,0.3); }
+        .top-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+        .menu-btn { background: none; border: none; color: white; font-size: 1.6em; cursor: pointer; margin-right: 10px; }
+        .app-title { font-weight: bold; font-size: 1.3em; display: flex; align-items: center; }
+        .tasa-container { background: rgba(255,255,255,0.1); padding: 5px 10px; border-radius: 8px; display: flex; align-items: center; gap: 5px; border: 1px solid rgba(255,255,255,0.2); }
+        .tasa-input { background: transparent; border: none; color: #00e676; font-weight: bold; font-size: 1.1em; width: 60px; text-align: center; outline: none; }
+        .search-box { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-main); margin-bottom: 5px; font-size: 16px; outline:none; transition: all 0.3s; }
 
-        .top-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-        .app-title { font-weight: bold; font-size: 1.3em; color: #fff; letter-spacing: 1px; }
+        /* FILTROS SUPERIORES */
+        .filters-container-sticky { background: var(--bg-body); padding: 10px 10px 5px 10px; position: sticky; top: 60px; z-index: 900; transition: background 0.3s; }
+        .stock-filter-row { display: flex; gap: 10px; margin-bottom: 10px; }
+        .stock-btn { flex: 1; padding: 10px; border-radius: 8px; border: 2px solid var(--border-color); background: var(--bg-card); color: var(--text-sec); font-weight: bold; cursor: pointer; transition: all 0.2s; text-align: center; }
+        .stock-btn.active-stock { background: var(--highlight); color: white; border-color: var(--highlight); box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+
+        .chips-row-container { overflow-x: auto; white-space: nowrap; padding-bottom: 5px; -webkit-overflow-scrolling: touch; }
+        .chip-btn { display: inline-block; padding: 6px 12px; margin-right: 8px; background: var(--chip-bg); color: var(--chip-text); border-radius: 20px; font-size: 0.9em; font-weight: 600; cursor: pointer; border: 1px solid var(--border-color); transition: all 0.2s; }
+        .chip-btn.active-chip { background: var(--chip-active); color: var(--bg-body); border-color: var(--chip-active); }
+        body.dark-mode .chip-btn.active-chip { color: #000; }
+
+        /* MENU LATERAL */
+        .sidebar-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2500; display: none; backdrop-filter: blur(2px); }
+        .sidebar { position: fixed; top: 0; left: -260px; width: 260px; height: 100%; background: var(--bg-card); z-index: 2501; transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; border-right: 1px solid var(--border-color); box-shadow: 4px 0 10px rgba(0,0,0,0.3); }
+        .sidebar.open { left: 0; }
+        .sidebar-header { padding: 25px 20px; background: var(--header-bg); color: white; font-weight: bold; font-size: 1.3em; border-bottom: 3px solid var(--highlight); }
+        .sidebar-item { padding: 15px 20px; border-bottom: 1px solid var(--border-color); cursor: pointer; color: var(--text-main); font-size: 1.1em; display: flex; align-items: center; gap: 10px; transition: background 0.2s; }
+        .sidebar-item:active { background: var(--highlight-light); }
+
+        /* VISTAS Y TARJETAS */
+        .view-section { display: none; }
+        .view-section.active-view { display: block; }
+        .container { padding: 10px; max-width: 600px; margin: 0 auto; }
+
+        .card { background: var(--bg-card); border-radius: 12px; padding: 12px; margin-bottom: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; flex-direction: column; border: 1px solid var(--border-color); gap: 8px; transition: all 0.2s; }
+        .card.active-item { border: 2px solid var(--highlight); background-color: var(--highlight-light); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        .card-top { display: flex; gap: 12px; align-items: stretch; }
         
-        .tasa-container { background: #333; padding: 5px 10px; border-radius: 8px; display: flex; align-items: center; gap: 5px; border: 1px solid #555; }
-        .tasa-input { background: transparent; border: none; color: #00e676; font-weight: bold; font-size: 1.1em; width: 55px; text-align: center; outline: none; }
+        .thumb-img, .thumb-placeholder { width: 75px; height: 75px; border-radius: 8px; object-fit: cover; flex-shrink: 0; border: 1px solid var(--border-color); }
+        .thumb-placeholder { background: var(--box-bg); display: flex; align-items: center; justify-content: center; font-size: 24px; color: var(--text-sec); font-weight: bold; }
+
+        .info { flex: 1; display: flex; flex-direction: column; justify-content: center; min-width: 0; }
+        .title { font-weight: bold; font-size: 1.1em; line-height: 1.2; color: var(--text-main); margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         
-        .search-box { width: 100%; padding: 12px; border-radius: 8px; border: none; outline: none; font-size: 16px; background: #fff; margin-bottom: 10px; }
+        .tags-row { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 4px; }
+        .tag { font-size: 0.7em; padding: 2px 6px; border-radius: 4px; font-weight: bold; border: 1px solid var(--border-color); }
+        .cat-tag { background: var(--box-bg); color: var(--text-sec); }
+        .stock-tag { background: #e8f5e9; color: #2e7d32; }
+        body.dark-mode .stock-tag { background: #1b5e20; color: #a5d6a7; border-color: #2e7d32; }
+        .stock-tag.zero { background: #ffebee; color: #c62828; border-color: #e57373; }
+        body.dark-mode .stock-tag.zero { background: #b71c1c; color: #ffcdd2; }
 
-        /* BARRA DE CATEGORÍAS */
-        .cat-scroll { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; scrollbar-width: none; white-space: nowrap; }
-        .cat-scroll::-webkit-scrollbar { display: none; } 
-        .cat-chip { background: #333; color: #e0e0e0; padding: 6px 15px; border-radius: 20px; font-size: 0.9em; border: 1px solid #555; cursor: pointer; transition: background 0.2s; }
-        .cat-chip.active { background: #0288d1; color: white; border-color: #0288d1; font-weight: bold; }
-
-        /* CONTENEDOR PRINCIPAL */
-        .container { padding: 10px; max-width: 600px; margin: 0 auto; width: 100%; }
-        .section-title { padding: 15px 5px 5px 5px; font-weight: bold; color: #546e7a; font-size: 0.9em; text-transform: uppercase; display: none; } /* Oculto por defecto en modo turbo */
-        .section-title.visible { display: block; }
-
-        /* TARJETAS */
-        .card { background: white; border-radius: 12px; padding: 12px; margin-bottom: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; flex-direction: column; gap: 8px; transform: translateZ(0); /* Acelerar GPU */ }
+        .price { color: var(--highlight); font-weight: bold; font-size: 1.1em; }
         
-        /* CLASE PARA OCULTAR RAPIDO */
-        .card.hidden { display: none !important; }
-        
-        .card.active-item { border: 2px solid #0288d1; background-color: #e1f5fe; order: -1; } /* Order -1 sube los items al inicio flex */
+        .card-actions { display: flex; flex-direction: column; justify-content: space-between; align-items: center; padding-left: 5px; }
+        .btn-icon { background: none; border: none; font-size: 1.2em; cursor: pointer; opacity: 0.8; padding: 5px; transition: opacity 0.2s; }
+        .btn-icon:active { opacity: 1; transform: scale(1.1); }
 
-        /* FLEX ORDERING GROUP: Para simular las secciones visualmente */
-        /* Usaremos un truco: el contenedor será Flex Column. Los items comprados tienen order: -10. */
-        #mainContainer { display: flex; flex-direction: column; }
+        .card-controls { display: flex; align-items: center; justify-content: space-between; background: var(--box-bg); padding: 8px; border-radius: 8px; border: 1px solid var(--border-color); }
+        .qty-input { width: 60px; padding: 8px; border: 2px solid var(--border-color); border-radius: 6px; text-align: center; font-size: 1.1em; font-weight: bold; background: var(--input-bg); color: var(--text-main); transition: border-color 0.2s; }
+        .qty-input:focus { border-color: var(--highlight); outline: none; }
+        .row-total { font-size: 0.9em; text-align: right; color: var(--text-sec); font-weight: bold; line-height: 1.2; }
+        .row-total.active { color: #00e676; }
 
-        .card-top { display: flex; gap: 12px; }
-        .img-box { width: 75px; height: 75px; background: #cfd8dc; border-radius: 8px; object-fit: cover; flex-shrink: 0; border: 1px solid #ddd; cursor: zoom-in; }
-        
-        .info { flex: 1; display: flex; flex-direction: column; justify-content: center; }
-        .title { font-weight: bold; font-size: 1.1em; color: #263238; line-height: 1.2; }
-        
-        .tags-row { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
-        .category-tag { font-size: 0.7em; background: #eceff1; color: #455a64; padding: 2px 6px; border-radius: 4px; font-weight: bold; border: 1px solid #cfd8dc; }
-        .car-tag { font-size: 0.7em; background: #fff3e0; color: #e65100; padding: 2px 6px; border-radius: 4px; border: 1px solid #ffe0b2; }
-
-        .price { color: #0288d1; font-weight: bold; font-size: 1em; margin-top: 4px; }
-        
-        .card-actions { display: flex; flex-direction: column; justify-content: space-between; align-items: center; gap: 5px; }
-        .btn-icon { background: none; border: none; font-size: 1.2em; cursor: pointer; padding: 5px; opacity: 0.6; }
-
-        .card-controls { display: flex; align-items: center; justify-content: space-between; background: #f5f5f5; padding: 8px; border-radius: 8px; margin-top: 5px; }
-        .card.active-item .card-controls { background: #b3e5fc; }
-        .qty-input { width: 50px; padding: 8px; border: 1px solid #b0bec5; border-radius: 6px; text-align: center; font-size: 1.2em; font-weight: bold; background: white; }
-        .row-total { font-size: 0.9em; text-align: right; color: #546e7a; font-weight: bold; line-height: 1.2; }
-        .row-total.active { color: #2e7d32; }
-
-        /* BARRA INFERIOR */
-        .total-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: #111; color: white; padding: 12px 0; z-index: 2000; box-shadow: 0 -4px 10px rgba(0,0,0,0.3); }
-        .total-content { display: flex; justify-content: space-between; align-items: center; max-width: 600px; margin: 0 auto; padding: 0 20px; width: 100%; }
-        .gran-total-usd { font-size: 1.3em; font-weight: bold; color: #fff; }
+        /* TOTAL BAR */
+        .total-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: #111; color: white; padding: 10px 15px; z-index: 2000; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 -4px 10px rgba(0,0,0,0.3); }
+        .gran-total-usd { font-size: 1.3em; font-weight: bold; color: #fff; margin-bottom: -2px; }
         .gran-total-bs { font-size: 0.9em; color: #00e676; }
-        .btn-clean { background: #c62828; color: white; border: none; padding: 8px 12px; border-radius: 6px; font-weight: bold; font-size: 0.8em; }
+        .btn-clean { background: #c62828; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; font-size: 1em; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
 
-        .fab { position: fixed; bottom: 90px; right: 20px; width: 56px; height: 56px; background-color: #0288d1; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; box-shadow: 0 4px 12px rgba(0,2,136,0.4); cursor: pointer; z-index: 1500; border: none; }
-
-        .modal, .modal-zoom { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 3000; align-items: center; justify-content: center; backdrop-filter: blur(3px); }
-        .modal-content { background: white; padding: 20px; border-radius: 12px; width: 85%; max-width: 350px; display: flex; flex-direction: column; gap: 10px; max-height: 90vh; overflow-y: auto; }
-        .modal input { padding: 10px; border: 1px solid #cfd8dc; border-radius: 8px; font-size: 16px; width: 100%; }
-        .label-input { font-size: 0.85em; font-weight: bold; color: #546e7a; margin-bottom: -5px; margin-top: 5px; }
-        .modal-btns { display: flex; gap: 10px; margin-top: 15px; }
-        .btn { flex: 1; padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 16px; }
-        .btn-save { background: #0288d1; color: white; }
-        .btn-cancel { background: #cfd8dc; color: #37474f; }
+        /* MODALES */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 3000; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+        .modal-content { background: var(--bg-card); padding: 20px; border-radius: 16px; width: 95%; max-width: 400px; display: flex; flex-direction: column; gap: 10px; max-height: 90vh; overflow-y: auto; color: var(--text-main); border: 1px solid var(--border-color); box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .modal input, .modal select { padding: 12px; border: 2px solid var(--border-color); border-radius: 8px; font-size: 16px; width: 100%; background: var(--input-bg); color: var(--text-main); transition: border-color 0.2s; }
+        .modal input:focus, .modal select:focus { border-color: var(--highlight); outline: none; }
+        .label-input { font-size: 0.9em; font-weight: bold; color: var(--text-sec); margin-top: 5px; }
+        .modal-btns { display: flex; gap: 10px; margin-top: 20px; }
+        .btn { flex: 1; padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 16px; text-align: center; transition: opacity 0.2s; }
+        .btn:active { opacity: 0.8; }
+        .btn-save { background: var(--highlight); color: white; }
+        .btn-cancel { background: var(--box-bg); color: var(--text-main); border: 1px solid var(--border-color); }
         
-        .zoom-img { max-width: 100%; max-height: 100%; object-fit: contain; }
-        .close-zoom { position: absolute; top: 20px; right: 20px; color: white; font-size: 40px; cursor: pointer; }
-        #previewImg { width: 100px; height: 100px; object-fit: cover; border-radius: 8px; margin-top: 5px; display: none; border: 1px solid #ddd; align-self: center; }
+        .fab { position: fixed; bottom: 90px; right: 20px; width: 60px; height: 60px; background: var(--highlight); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 32px; box-shadow: 0 4px 12px rgba(0,0,0,0.4); z-index: 1500; border: none; cursor: pointer; transition: transform 0.2s; }
+        .fab:active { transform: scale(0.95); }
+
+        /* FUENTES */
+        body.font-xxs { font-size: 12px; }
+        body.font-xs { font-size: 13px; }
+        body.font-s { font-size: 14px; }
+        body.font-m { font-size: 16px; }
+        body.font-l { font-size: 18px; }
+        body.font-xl { font-size: 20px; }
+        body.font-xxl { font-size: 22px; }
+        
+        .btn-group-wrap { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px; }
+        .btn-opt { flex: 1 0 30%; padding: 10px; background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer; color: var(--text-main); font-weight: bold; font-size: 0.9em; }
+
+        /* FILTROS VEHICULOS */
+        .vehiculo-card { background: var(--bg-card); border-radius: 12px; margin-bottom: 10px; border: 1px solid var(--border-color); border-left: 5px solid var(--highlight); padding: 10px; }
+        .vehiculo-header { font-weight: bold; font-size: 1.1em; color: var(--text-main); display: flex; justify-content: space-between; align-items: center; }
+        .vehiculo-sub { color: var(--text-sec); font-size: 0.9em; margin-bottom: 8px; border-bottom: 1px solid var(--border-color); padding-bottom: 5px; }
+        .vehiculo-item { display: flex; justify-content: space-between; align-items: center; padding: 4px 0; font-size: 0.95em; }
+        .tag-tipo { padding: 2px 6px; border-radius: 4px; font-size: 0.8em; font-weight: bold; color: white; width: 70px; text-align: center; }
+        .tag-aceite { background: #5d4037; } .tag-aire { background: #1976d2; } .tag-gasolina { background: #e64a19; }
+
+        .details-toggle { background: var(--highlight-light); color: var(--highlight); text-align: center; padding: 8px; font-size: 0.9em; font-weight: bold; cursor: pointer; border-top: 1px solid var(--border-color); border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; margin-top: -8px; transition: background 0.2s; }
+        .details-toggle:active { background: var(--border-color); }
+        .details-box { display: none; background: var(--box-bg); padding: 10px; font-size: 0.9em; border-top: 1px solid var(--border-color); color: var(--text-sec); border-radius: 0 0 12px 12px; }
+        .compat-row { border-bottom: 1px solid var(--border-color); padding: 6px 0; display: flex; justify-content: space-between; align-items: center; }
     </style>
 </head>
-<body>
+<body class="font-m">
+
+    <div class="sidebar-overlay" onclick="toggleMenu()"></div>
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">Stocktien Pro V23</div>
+        <div class="sidebar-item" onclick="navTo('store')">🏠 Tienda General</div>
+        <div class="sidebar-item" onclick="navTo('filtros')">🚗 Catálogo Filtros</div>
+        <div class="sidebar-item" onclick="abrirSettings()">🎨 Personalizar</div>
+        <div class="sidebar-item" onclick="exportData()" style="margin-top: auto; border-top: 3px solid var(--border-color);">💾 Exportar Datos</div>
+        <div class="sidebar-item" onclick="importData()">📂 Importar Datos</div>
+    </div>
+    <input type="file" id="import-file" accept=".json" style="display:none" onchange="handleImport(event)">
 
     <div class="header">
-        <div class="header-content">
-            <div class="top-row">
-                <div class="app-title">Mi Tienda</div>
-                <div class="tasa-container">
-                    <span>Bs.</span>
-                    <input type="number" id="tasaGlobal" class="tasa-input" value="40" oninput="guardarTasa(); actualizarPreciosVisuales()">
+        <div class="top-row">
+            <div class="app-title">
+                <button class="menu-btn" onclick="toggleMenu()">☰</button>
+                <span id="pageTitle">Tienda</span>
+            </div>
+            <div class="tasa-container">
+                <span>Bs.</span>
+                <input type="number" id="tasaGlobal" class="tasa-input" value="40" oninput="actualizarTasa(this.value)">
+            </div>
+        </div>
+    </div>
+
+    <div id="view-store" class="view-section active-view">
+        <div class="filters-container-sticky">
+            <input type="text" id="buscador" class="search-box" style="margin:0" placeholder="🔍 Buscar artículo..." oninput="filtrarStore()">
+            <div style="margin-top: 10px;">
+                <div class="stock-filter-row">
+                    <div class="stock-btn active-stock" id="btn-stock-todos" onclick="setStockFilter('todos')">Todos</div>
+                    <div class="stock-btn" id="btn-stock-disp" onclick="setStockFilter('disponibles')">Disponibles</div>
+                    <div class="stock-btn" id="btn-stock-agot" onclick="setStockFilter('agotados')" style="color: var(--danger)">Agotados</div>
                 </div>
-                <div style="font-size:1.5em; cursor:pointer; padding: 0 10px; color:white;" onclick="menuExportar()">⋮</div>
-                <input type="file" id="importInput" style="display: none" onchange="importarDatos(this)">
+                <div class="chips-row-container" id="category-chips-container"></div>
             </div>
-            <input type="text" id="buscador" class="search-box" placeholder="🔍 Buscar..." oninput="filtrarRapido()">
-            <div class="cat-scroll" id="catContainer"></div>
+        </div>
+        
+        <div class="container">
+            <div id="listaTienda" style="margin-top: 10px;"></div>
+            <div id="msgVacioTienda" style="text-align:center; padding:30px; color:var(--text-sec); display:none; font-style: italic;">
+                No se encontraron artículos con estos filtros.
+            </div>
+        </div>
+        <button class="fab" onclick="abrirModalTienda()">+</button>
+        
+        <div class="total-bar">
+            <div>
+                <div class="gran-total-usd" id="totalMonto">$0.00</div>
+                <div class="gran-total-bs" id="totalMontoBs">Bs. 0.00</div>
+            </div>
+            <button class="btn-clean" onclick="vaciarCarrito()">🗑️ Vaciar</button>
         </div>
     </div>
 
-    <div id="mainContainer" class="container"></div>
-
-    <div class="total-bar">
-        <div class="total-content">
-            <div class="total-info">
-                <div class="gran-total-usd" id="totalUsd">$0.00</div>
-                <div class="gran-total-bs" id="totalBs">Bs. 0.00</div>
+    <div id="view-filtros" class="view-section">
+        <div style="background:var(--header-bg); padding:10px; position:sticky; top:60px; z-index:900;">
+            <div class="chips-row-container" style="margin-bottom: 10px;">
+                <button class="chip-btn active-chip" id="tab-vehiculos" onclick="setFiltroTab('Vehiculos')">🚗 Vehículos</button>
+                <button class="chip-btn" id="tab-aceite" onclick="setFiltroTab('Aceite')">🛢️ Aceite</button>
+                <button class="chip-btn" id="tab-aire" onclick="setFiltroTab('Aire')">💨 Aire</button>
+                <button class="chip-btn" id="tab-gasolina" onclick="setFiltroTab('Gasolina')">⛽ Gasolina</button>
             </div>
-            <button class="btn-clean" onclick="limpiarTodo()">🗑️ Vaciar</button>
+            <input type="text" id="buscadorFiltros" class="search-box" style="margin:0" placeholder="🔍 Buscar vehículo o código..." oninput="renderFiltrosView()">
         </div>
+        <div class="container" id="listaFiltros" style="margin-top:10px"></div>
+        <button class="fab" onclick="abrirModalFiltro()">+</button>
     </div>
 
-    <button class="fab" onclick="abrirModal()">+</button>
-
-    <div class="modal" id="modalProducto">
+    <div class="modal" id="modalTienda">
         <div class="modal-content">
-            <h3 style="margin:0; color:#37474f;" id="modalTitle">Producto</h3>
+            <h3 id="mt_title" style="margin:0; color:var(--highlight)">Nuevo Artículo</h3>
+            
+            <div class="label-input">Foto (Calidad Mejorada):</div>
+            <input type="file" id="t_img_input" accept="image/*">
+            
             <div class="label-input">Nombre:</div>
-            <input type="text" id="inpNombre" placeholder="Ej: Filtro de Aceite">
-            <div class="label-input">Precio ($):</div>
-            <input type="number" id="inpPrecio" placeholder="0.00">
-            <div class="label-input">Categoría:</div>
-            <input type="text" id="inpCategoria" list="listaCategorias" placeholder="Ej: Frenos">
-            <datalist id="listaCategorias"></datalist>
-            <div class="label-input">Vehículos:</div>
-            <input type="text" id="inpVehiculos" placeholder="Ej: Corsa, Aveo...">
-            <div class="label-input">Foto:</div>
-            <input type="file" id="inpImgFile" accept="image/*">
-            <img id="previewImg">
+            <input type="text" id="t_nombre" placeholder="Ej: Bujía...">
+            
+            <div class="label-input">Categoría (Escribe una nueva o usa existentes):</div>
+            <input type="text" id="t_cat" placeholder="Ej: Motor, Frenos, Bombillos..." list="listaCatsSugeridas">
+            <datalist id="listaCatsSugeridas"></datalist>
+
+            <div class="form-grid">
+                <div><div class="label-input">Precio ($):</div><input type="number" id="t_precio" step="0.01"></div>
+                <div><div class="label-input">Stock:</div><input type="number" id="t_stock" value="1"></div>
+            </div>
+            <div class="label-input">Detalles / Compatibilidad:</div>
+            <input type="text" id="t_vehiculos" placeholder="Notas extra...">
+            
             <div class="modal-btns">
-                <button class="btn btn-cancel" onclick="cerrarModal()">Cancelar</button>
-                <button class="btn btn-save" id="btnGuardar" onclick="guardarProducto()">Guardar</button>
+                <button class="btn btn-cancel" onclick="cerrarModales()">Cancelar</button>
+                <button class="btn btn-save" onclick="guardarTienda()">Guardar Artículo</button>
             </div>
         </div>
     </div>
 
-    <div class="modal-zoom" id="modalZoom" onclick="cerrarZoom()">
-        <div class="close-zoom">×</div>
-        <img class="zoom-img" id="imgZoomDisplay">
-    </div>
-    <canvas id="canvasCompress" style="display:none;"></canvas>
-    <script>
-        let productos = [];
-        let cantidades = {}; 
-        let tasa = 40;
-        let editId = null;
-        let imgComprimida = ""; 
-        let categoriaActiva = "Todos";
-
-        window.onload = function() {
-            cargarDatos();
-            renderizarCategorias();
-            renderizarInicial(); // PINTA TODO UNA SOLA VEZ
-        };
-
-        function guardarDatos() {
-            try { localStorage.setItem('v8_db', JSON.stringify(productos)); } 
-            catch (e) { alert("⚠️ Memoria llena."); }
-        }
-        function guardarTasa() {
-            tasa = document.getElementById('tasaGlobal').value;
-            localStorage.setItem('v8_tasa', tasa);
-        }
-        function cargarDatos() {
-            const db = localStorage.getItem('v8_db');
-            const t = localStorage.getItem('v8_tasa');
-            if (db) productos = JSON.parse(db);
-            if (t) { tasa = t; document.getElementById('tasaGlobal').value = tasa; }
-            productos.forEach(p => { if(!p.id) p.id = Date.now() + Math.random(); });
-        }
-
-        function renderizarCategorias() {
-            const cats = ["Todos", ...new Set(productos.map(p => p.categoria).filter(Boolean))].sort();
-            const div = document.getElementById('catContainer');
-            div.innerHTML = "";
-            cats.forEach(c => {
-                const btn = document.createElement('div');
-                btn.className = `cat-chip ${c === categoriaActiva ? 'active' : ''}`;
-                btn.innerText = c;
-                btn.onclick = () => { 
-                    categoriaActiva = c; 
-                    renderizarCategorias(); // Actualiza colores botones
-                    filtrarRapido(); // Solo oculta/muestra, no redibuja
-                };
-                div.appendChild(btn);
-            });
-            document.getElementById('listaCategorias').innerHTML = cats.filter(c => c !== "Todos").map(c => `<option value="${c}">`).join('');
-        }
-
-        // --- NUEVO MOTOR DE RENDERIZADO (SIN LAG) ---
-        function renderizarInicial() {
-            const contenedor = document.getElementById('mainContainer');
-            contenedor.innerHTML = '';
+    <div class="modal" id="modalFiltro">
+        <div class="modal-content">
+            <h3 style="margin:0; color:var(--highlight)" id="mf_title">Agregar Vehículo/Filtro</h3>
+            <p style="font-size:0.8em; color:var(--text-sec); margin:0 0 10px 0;">Define el vehículo y asigna o edita su filtro.</p>
             
-            // Ordenar A-Z antes de pintar
-            productos.sort((a, b) => a.nombre.localeCompare(b.nombre));
+            <div style="background:var(--box-bg); padding:10px; border-radius:8px; border:1px solid var(--border-color);">
+                <div class="form-grid">
+                    <div><div class="label-input">Marca:</div><input type="text" id="f_marca" placeholder="Toyota"></div>
+                    <div><div class="label-input">Modelo:</div><input type="text" id="f_modelo" placeholder="Corolla"></div>
+                </div>
+                <div class="form-grid">
+                    <div><div class="label-input">Motor:</div><input type="text" id="f_motor" placeholder="1.8"></div>
+                    <div><div class="label-input">Cilindros:</div><input type="text" id="f_cil" placeholder="4"></div>
+                </div>
+                <div class="form-grid">
+                    <div><div class="label-input">Año Desde:</div><input type="number" id="f_ano1" placeholder="2000"></div>
+                    <div><div class="label-input">Hasta:</div><input type="number" id="f_ano2" placeholder="2005"></div>
+                </div>
+            </div>
 
-            productos.forEach(p => {
-                const imgUrl = p.img ? p.img : 'https://via.placeholder.com/80?text=Foto';
-                const cant = cantidades[p.id] || 0;
-                
-                // Crear elemento DOM real
-                const card = document.createElement('div');
-                card.className = `card ${cant > 0 ? 'active-item' : ''}`;
-                card.id = `card-${p.id}`;
-                card.style.order = cant > 0 ? "-1" : "0"; // CSS Order para mover al inicio
-                
-                // Datos para búsqueda rápida (Dataset)
-                card.dataset.search = (p.nombre + " " + (p.categoria||"") + " " + (p.vehiculos||"")).toLowerCase();
-                card.dataset.cat = p.categoria || "";
-                card.dataset.price = p.precio;
+            <div style="border-top:2px dashed var(--border-color); margin:10px 0;"></div>
+            
+            <div class="label-input">Foto del Filtro (Calidad Mejorada):</div>
+            <input type="file" id="f_img_input" accept="image/*">
 
-                let tagsHtml = `<div class="tags-row">`;
-                if(p.categoria) tagsHtml += `<span class="category-tag">${p.categoria}</span>`;
-                if(p.vehiculos) tagsHtml += `<span class="car-tag">🚗 ${p.vehiculos}</span>`;
-                tagsHtml += `</div>`;
+            <div class="label-input">Tipo de Filtro:</div>
+            <select id="f_tipo">
+                <option value="Aceite">🛢️ Aceite</option>
+                <option value="Aire">💨 Aire</option>
+                <option value="Gasolina">⛽ Gasolina</option>
+            </select>
 
+            <div class="label-input">Código del Filtro:</div>
+            <input type="text" id="f_codigo" placeholder="Ej: ML-4999">
+            
+            <div class="form-grid">
+                <div><div class="label-input">Precio ($):</div><input type="number" id="f_precio" step="0.01"></div>
+                <div><div class="label-input">Stock:</div><input type="number" id="f_stock" value="1"></div>
+            </div>
+
+            <div class="modal-btns">
+                <button class="btn btn-cancel" onclick="cerrarModales()">Cancelar</button>
+                <button class="btn btn-save" onclick="guardarFiltroLogic()">Guardar</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal" id="modalSettings">
+        <div class="modal-content">
+            <h3 style="margin:0">Personalizar</h3>
+            <label style="display:flex; align-items:center; gap:10px; padding:15px; background:var(--box-bg); border:1px solid var(--border-color); border-radius:8px; font-weight:bold;">
+                <input type="checkbox" id="chkDark" onchange="toggleDark(this.checked)" style="width:auto; margin:0;"> Modo Oscuro
+            </label>
+            
+            <div class="label-input" style="margin-top:15px">Tamaño de Letra (7 Niveles):</div>
+            <div class="btn-group-wrap">
+                <button class="btn-opt" onclick="setVisual('font','font-xxs')">XXS</button>
+                <button class="btn-opt" onclick="setVisual('font','font-xs')">XS</button>
+                <button class="btn-opt" onclick="setVisual('font','font-s')">S</button>
+                <button class="btn-opt" onclick="setVisual('font','font-m')">Normal</button>
+                <button class="btn-opt" onclick="setVisual('font','font-l')">L</button>
+                <button class="btn-opt" onclick="setVisual('font','font-xl')">XL</button>
+                <button class="btn-opt" onclick="setVisual('font','font-xxl')">XXL</button>
+            </div>
+            <button class="btn btn-save" style="margin-top:20px" onclick="cerrarModales()">Listo, cerrar</button>
+        </div>
+    </div>
+    <div class="modal" id="modalZoom" onclick="this.style.display='none'" style="z-index:4000; flex-direction:column;">
+        <div style="color:white; font-size:40px; align-self:flex-end; margin-right:20px; cursor:pointer; margin-bottom:10px;">&times;</div>
+        <img id="imgZoomDisplay" style="max-width:95%; max-height:80vh; object-fit:contain; border-radius:12px; box-shadow:0 10px 25px rgba(0,0,0,0.8);">
+    </div>
+    
+    <script>
+        let db; const DB_NAME = "StocktienV23Final"; const DB_VERSION = 1;
+        let tienda = []; let filtrosDB = []; let carritoMap = {}; 
+        let tasa = 40; 
+        let editId = null; let editStoreName = "";
+
+        let filtroStockState = 'todos';
+        let categoriaActiva = '';
+        let tabFiltroActivo = "Vehiculos";
+
+        window.onload = () => { initDB(); cargarConfig(); };
+
+        // --- DB & CARGA ---
+        function initDB() {
+            let req = indexedDB.open(DB_NAME, DB_VERSION);
+            req.onupgradeneeded = (e) => {
+                let db = e.target.result;
+                if (!db.objectStoreNames.contains("productos")) db.createObjectStore("productos", { keyPath: "id" });
+                if (!db.objectStoreNames.contains("filtros")) db.createObjectStore("filtros", { keyPath: "id" });
+            };
+            req.onsuccess = (e) => { db = e.target.result; cargarTodo(); };
+        }
+        function cargarTodo() {
+            db.transaction("productos").objectStore("productos").getAll().onsuccess = (e) => {
+                tienda = e.target.result || [];
+                tienda.forEach(p => { if(p.categoria) p.categoria = p.categoria.trim().charAt(0).toUpperCase() + p.categoria.slice(1).toLowerCase(); });
+                tienda.sort((a,b) => a.nombre.localeCompare(b.nombre));
+                actualizarSugerenciasCategorias(); // <--- LLAMADA AL AUTOCOMPLETAR
+                if(document.getElementById('view-store').classList.contains('active-view')) filtrarStore();
+            };
+            db.transaction("filtros").objectStore("filtros").getAll().onsuccess = (e) => {
+                filtrosDB = e.target.result || [];
+                if(document.getElementById('view-filtros').classList.contains('active-view')) renderFiltrosView();
+            };
+        }
+
+        // --- NUEVO: LLENAR DATALIST AUTOCOMPLETAR ---
+        function actualizarSugerenciasCategorias() {
+            let cats = new Set();
+            tienda.forEach(p => { if(p.categoria) cats.add(p.categoria); });
+            let html = '';
+            Array.from(cats).sort().forEach(c => html += `<option value="${c}">`);
+            document.getElementById('listaCatsSugeridas').innerHTML = html;
+        }
+
+        // --- LOGICA TIENDA ---
+        function filtrarStore() {
+            const txt = document.getElementById('buscador').value.toLowerCase();
+            let listaFiltrada = tienda;
+            if (txt) listaFiltrada = listaFiltrada.filter(p => (p.nombre + " " + (p.categoria||"")).toLowerCase().includes(txt));
+            if (filtroStockState === 'disponibles') listaFiltrada = listaFiltrada.filter(p => p.stock > 0);
+            else if (filtroStockState === 'agotados') listaFiltrada = listaFiltrada.filter(p => p.stock <= 0);
+            
+            renderCategoryChips(listaFiltrada);
+            if (categoriaActiva) listaFiltrada = listaFiltrada.filter(p => p.categoria === categoriaActiva);
+            renderListaTienda(listaFiltrada);
+        }
+        function renderCategoryChips(productosVisibles) {
+            const container = document.getElementById('category-chips-container');
+            let categoriasUnicas = new Set();
+            productosVisibles.forEach(p => { if(p.categoria) categoriasUnicas.add(p.categoria); });
+            let listaCats = Array.from(categoriasUnicas).sort();
+            let html = `<div class="chip-btn ${categoriaActiva === '' ? 'active-chip' : ''}" onclick="setCategoryFilter('')">Todas</div>`;
+            listaCats.forEach(cat => { html += `<div class="chip-btn ${categoriaActiva === cat ? 'active-chip' : ''}" onclick="setCategoryFilter('${cat}')">${cat}</div>`; });
+            container.innerHTML = html;
+        }
+        function renderListaTienda(lista) {
+            const cont = document.getElementById('listaTienda'); cont.innerHTML = "";
+            document.getElementById('msgVacioTienda').style.display = lista.length === 0 ? 'block' : 'none';
+            lista.slice(0, 50).forEach(p => {
+                let qty = carritoMap[p.id] || 0; let activeClass = qty > 0 ? "active-item" : "";
+                let imgHtml = p.imagen ? `<img src="${p.imagen}" class="thumb-img" alt="${p.nombre}" onclick="verFoto('${p.imagen}')" style="cursor:pointer;">` : `<div class="thumb-placeholder">${p.nombre.charAt(0).toUpperCase()}</div>`;
+                let stockTagClass = p.stock <= 0 ? 'zero' : ''; let stockText = p.stock <= 0 ? 'AGOTADO' : 'Stock: ' + p.stock;
+                let totalRowStr = qty > 0 ? `$${(p.precio*qty).toFixed(2)}<br>Bs. ${(p.precio*qty*tasa).toFixed(2)}` : `$0.00<br>Bs. 0.00`;
+
+                const card = document.createElement('div'); card.className = `card ${activeClass}`; card.id = `card-item-${p.id}`;
                 card.innerHTML = `
                     <div class="card-top">
-                        <img src="${imgUrl}" class="img-box" onclick="verFoto('${imgUrl}')" loading="lazy">
+                        ${imgHtml}
                         <div class="info">
                             <div class="title">${p.nombre}</div>
-                            ${tagsHtml}
-                            <div class="price">Ref: $<span class="price-val">${parseFloat(p.precio).toFixed(2)}</span></div>
+                            <div class="tags-row">
+                                ${p.categoria ? `<span class="tag cat-tag">${p.categoria}</span>` : ''}
+                                <span class="tag stock-tag ${stockTagClass}">${stockText}</span>
+                            </div>
+                            <div class="price">Ref: $${parseFloat(p.precio).toFixed(2)}</div>
                         </div>
                         <div class="card-actions">
-                            <button class="btn-icon" onclick="editar('${p.id}')">✏️</button>
-                            <button class="btn-icon" onclick="borrar('${p.id}')" style="color:#ef5350">🗑️</button>
+                            <button class="btn-icon" style="color:var(--warn);" onclick="editarItem('productos', ${p.id})">✏️</button>
+                            <button class="btn-icon" style="color:var(--danger);" onclick="borrarItem('productos', ${p.id})">🗑️</button>
                         </div>
                     </div>
                     <div class="card-controls">
-                        <div style="font-weight:bold; color:#546e7a">Cant:</div>
-                        <input type="number" class="qty-input" value="${cant > 0 ? cant : ''}" placeholder="0" 
-                               oninput="cambiarCantidad('${p.id}', this.value)">
-                        <div class="row-total ${cant > 0 ? 'active' : ''}" id="total-${p.id}">
-                            ${calcularTextoTotal(cant, p.precio)}
+                        <div style="font-weight:bold; color:var(--text-sec); font-size:0.9em">Lleva:</div>
+                        <input type="number" class="qty-input" value="${qty > 0 ? qty : ''}" placeholder="0" inputmode="numeric" oninput="updateCartUI(${p.id}, this.value, ${p.precio})">
+                        <div class="row-total ${qty > 0 ? 'active' : ''}" id="total-row-${p.id}">${totalRowStr}</div>
+                    </div>`;
+                cont.appendChild(card);
+            });
+            calcularTotalBar();
+        }
+
+        // --- LOGICA FILTROS/VEHICULOS ---
+        function setFiltroTab(tab) {
+            tabFiltroActivo = tab;
+            document.querySelectorAll('#view-filtros .chip-btn').forEach(b => b.classList.remove('active-chip'));
+            document.getElementById('tab-'+tab.toLowerCase()).classList.add('active-chip');
+            renderFiltrosView();
+        }
+        function renderFiltrosView() {
+            const cont = document.getElementById('listaFiltros'); cont.innerHTML = "";
+            const txt = document.getElementById('buscadorFiltros').value.toLowerCase();
+
+            if (tabFiltroActivo === "Vehiculos") {
+                let vehiculosMap = {};
+                filtrosDB.forEach(f => {
+                    if(f.compatibilidad) {
+                        f.compatibilidad.forEach(car => {
+                            let key = `${car.marca}|${car.modelo}|${car.motor}|${car.cil}|${car.ano1}|${car.ano2}`;
+                            if((key + " " + f.codigo).toLowerCase().includes(txt)) {
+                                if(!vehiculosMap[key]) vehiculosMap[key] = { info: car, filtros: [] };
+                                vehiculosMap[key].filtros.push(f);
+                            }
+                        });
+                    }
+                });
+                Object.values(vehiculosMap).forEach(v => {
+                    let car = v.info;
+                    
+                    // Buscamos TODOS los filtros que tenga este carro, no solo uno
+                    let aceites = v.filtros.filter(x => x.tipo === 'Aceite');
+                    let aires = v.filtros.filter(x => x.tipo === 'Aire');
+                    let gasolinas = v.filtros.filter(x => x.tipo === 'Gasolina');
+
+                    // Armamos la lista de todo lo compatible
+                    let htmlFiltros = "";
+                    if(aceites.length > 0) aceites.forEach(f => htmlFiltros += renderFiltroLine(f, 'Aceite', 'tag-aceite'));
+                    else htmlFiltros += renderFiltroLine(null, 'Aceite', 'tag-aceite');
+
+                    if(aires.length > 0) aires.forEach(f => htmlFiltros += renderFiltroLine(f, 'Aire', 'tag-aire'));
+                    else htmlFiltros += renderFiltroLine(null, 'Aire', 'tag-aire');
+
+                    if(gasolinas.length > 0) gasolinas.forEach(f => htmlFiltros += renderFiltroLine(f, 'Gasolina', 'tag-gasolina'));
+                    else htmlFiltros += renderFiltroLine(null, 'Gasolina', 'tag-gasolina');
+
+                    const div = document.createElement('div'); div.className = "vehiculo-card";
+                    div.innerHTML = `
+                        <div class="vehiculo-header">
+                            <span>${car.marca} ${car.modelo} <small>(${car.ano1}-${car.ano2})</small></span>
+                            <div style="display:flex; gap:5px;">
+                                <button class="btn-icon" style="color:var(--highlight);" onclick='editarVehiculo(${JSON.stringify(car)})'>➕</button>
+                                <button class="btn-icon" style="color:var(--danger);" onclick='borrarVehiculoGlobal(${JSON.stringify(car)})'>🗑️</button>
+                            </div>
                         </div>
-                    </div>
-                `;
-                contenedor.appendChild(card);
-            });
-            calcularGranTotal();
-        }
-
-        function filtrarRapido() {
-            const filtro = document.getElementById('buscador').value.toLowerCase();
-            const cards = document.querySelectorAll('.card');
-            
-            cards.forEach(card => {
-                const matchTexto = card.dataset.search.includes(filtro);
-                const matchCat = categoriaActiva === "Todos" || card.dataset.cat === categoriaActiva;
-                
-                if (matchTexto && matchCat) {
-                    card.classList.remove('hidden');
-                } else {
-                    card.classList.add('hidden');
-                }
-            });
-        }
-
-        function actualizarPreciosVisuales() {
-            // Solo actualiza los textos de precios, no redibuja todo
-            tasa = parseFloat(document.getElementById('tasaGlobal').value) || 0;
-            for(let id in cantidades) {
-                const card = document.getElementById(`card-${id}`);
-                if(card) {
-                    const precio = parseFloat(card.dataset.price);
-                    const cant = cantidades[id];
-                    document.getElementById(`total-${id}`).innerHTML = calcularTextoTotal(cant, precio);
-                }
-            }
-            calcularGranTotal();
-        }
-
-        function calcularTextoTotal(cant, precio) {
-            if(!cant || cant <= 0) return "$0.00<br>Bs. 0.00";
-            const tUsd = cant * precio;
-            const tBs = tUsd * tasa;
-            return `$${tUsd.toFixed(2)}<br>Bs. ${tBs.toLocaleString('es-VE', {minimumFractionDigits: 2})}`;
-        }
-
-        function cambiarCantidad(id, valor) {
-            const val = parseFloat(valor) || 0;
-            const card = document.getElementById(`card-${id}`);
-            
-            if (val > 0) {
-                cantidades[id] = val;
-                card.classList.add('active-item');
-                card.style.order = "-1"; // Mover al inicio
-                document.getElementById(`total-${id}`).classList.add('active');
+                        <div class="vehiculo-sub">Motor: ${car.motor} (${car.cil} Cil)</div>
+                        ${htmlFiltros}
+                    `;
+                    cont.appendChild(div);
+                });
             } else {
-                delete cantidades[id];
-                card.classList.remove('active-item');
-                card.style.order = "0"; // Volver a su lugar
-                document.getElementById(`total-${id}`).classList.remove('active');
+                let list = filtrosDB.filter(f => f.tipo === tabFiltroActivo);
+                list = list.filter(f => (f.codigo + " " + f.vehiculos_str).toLowerCase().includes(txt));
+                list.forEach(f => {
+                    let imgHtml = f.imagen ? `<img src="${f.imagen}" class="thumb-img" alt="Filtro" onclick="verFoto('${f.imagen}')" style="cursor:pointer;">` : 
+                                 `<div class="thumb-placeholder" style="font-size:14px">${f.codigo.substring(0,3)}</div>`;
+
+                    const card = document.createElement('div'); card.className = "card";
+                    let carsHtml = f.compatibilidad.map(c => `
+                        <div class="compat-row">
+                            <span>${c.marca} ${c.modelo} (${c.ano1})</span>
+                            <button class="btn-icon" style="color:var(--danger); font-size:0.9em" onclick='desvincularVehiculo(${f.id}, ${JSON.stringify(c)})'>❌</button>
+                        </div>
+                    `).join('');
+                    
+                    let stockTagClass = f.stock <= 0 ? 'zero' : ''; let stockText = f.stock <= 0 ? 'AGOTADO' : 'Stock: ' + f.stock;
+
+                    card.innerHTML = `
+                        <div class="card-top">
+                            ${imgHtml}
+                            <div class="info">
+                                <div class="title">${f.codigo}</div>
+                                <div class="tags-row"><span class="tag stock-tag ${stockTagClass}">${stockText}</span></div>
+                                <div class="price">$${parseFloat(f.precio).toFixed(2)}</div>
+                            </div>
+                            <div class="card-actions">
+                                <button class="btn-icon" style="color:var(--warn);" onclick="editarItem('filtros', ${f.id})">✏️</button>
+                                <button class="btn-icon" style="color:var(--danger);" onclick="borrarItem('filtros', ${f.id})">🗑️</button>
+                            </div>
+                        </div>
+                        <div class="details-toggle" onclick="toggleDetails(this)">
+                            ▼ Ver ${f.compatibilidad.length} Vehículos Compatibles
+                        </div>
+                        <div class="details-box" style="display:none;">${carsHtml || 'Sin vehículos asignados.'}</div>
+                    `;
+                    cont.appendChild(card);
+                });
             }
+        }
+        function renderFiltroLine(f, tipo, tagClass) {
+            if(!f) return `<div class="vehiculo-item"><span class="${tagClass} tag-tipo">${tipo}</span> <span style="color:var(--text-sec)">---</span></div>`;
+            return `<div class="vehiculo-item"><span class="${tagClass} tag-tipo">${tipo}</span> <span style="font-weight:bold">${f.codigo}</span> <span style="color:var(--highlight)">$${parseFloat(f.precio).toFixed(2)}</span></div>`;
+        }
+        function toggleDetails(btn) {
+            let box = btn.nextElementSibling;
+            if(box.style.display === 'block') { box.style.display = 'none'; btn.innerText = btn.innerText.replace('▲','▼'); }
+            else { box.style.display = 'block'; btn.innerText = btn.innerText.replace('▼','▲'); }
+        }
+
+        // --- GUARDADO Y EDICION (CALIDAD DE IMAGEN MEJORADA: 400px y 0.8 de calidad) ---
+        function guardarTienda() {
+            const n = document.getElementById('t_nombre').value; const p = parseFloat(document.getElementById('t_precio').value);
+            if(!n || isNaN(p)) return alert("Nombre y Precio obligatorios");
             
-            // Actualizar solo texto de esta tarjeta
-            const precio = parseFloat(card.dataset.price);
-            document.getElementById(`total-${id}`).innerHTML = calcularTextoTotal(val, precio);
+            // CALIDAD MEJORADA AQUÍ (400px de ancho máximo)
+            processImage(document.getElementById('t_img_input').files[0], 400, 0.8, (base64Img) => {
+                const item = {
+                    id: editId ? editId : Date.now(),
+                    nombre: n, 
+                    categoria: document.getElementById('t_cat').value.trim().charAt(0).toUpperCase() + document.getElementById('t_cat').value.slice(1).toLowerCase(),
+                    precio: p, stock: parseInt(document.getElementById('t_stock').value) || 0, vehiculos: document.getElementById('t_vehiculos').value,
+                    imagen: base64Img ? base64Img : (editId && editStoreName=='productos' ? tienda.find(x=>x.id==editId).imagen : null)
+                };
+                db.transaction(["productos"], "readwrite").objectStore("productos").put(item).onsuccess = () => { cerrarModales(); cargarTodo(); categoriaActiva = ''; };
+            });
+        }
+
+        function guardarFiltroLogic() {
+            const car = { marca: getVal('f_marca'), modelo: getVal('f_modelo'), motor: getVal('f_motor'), cil: getVal('f_cil'), ano1: getVal('f_ano1'), ano2: getVal('f_ano2') };
+            const tipo = document.getElementById('f_tipo').value; const codigo = getVal('f_codigo');
+            const precio = parseFloat(document.getElementById('f_precio').value); const stock = parseInt(document.getElementById('f_stock').value) || 0;
+            if(!car.marca || !codigo || isNaN(precio)) return alert("Faltan datos obligatorios (Marca, Código, Precio)");
+
+            // CALIDAD MEJORADA AQUÍ TAMBIÉN (400px)
+            processImage(document.getElementById('f_img_input').files[0], 400, 0.8, (base64Img) => {
+                let filtroTarget;
+                if (editId && editStoreName === 'filtros') {
+                    filtroTarget = filtrosDB.find(f => f.id === editId);
+                    filtroTarget.codigo = codigo; filtroTarget.tipo = tipo; filtroTarget.precio = precio; filtroTarget.stock = stock;
+                    if(base64Img) filtroTarget.imagen = base64Img;
+                    
+                    let existeCar = filtroTarget.compatibilidad.some(c => esMismoCarro(c, car));
+                    if(!existeCar) { filtroTarget.compatibilidad.push(car); filtroTarget.vehiculos_str += ` ${car.marca} ${car.modelo}`; }
+                    db.transaction(["filtros"], "readwrite").objectStore("filtros").put(filtroTarget).onsuccess = () => { cerrarModales(); cargarTodo(); };
+                } else {
+                    let existente = filtrosDB.find(f => f.codigo.toLowerCase() === codigo.toLowerCase() && f.tipo === tipo);
+                    if(existente) {
+                        if(!existente.compatibilidad.some(c => esMismoCarro(c, car))) { existente.compatibilidad.push(car); existente.vehiculos_str += ` ${car.marca} ${car.modelo}`; }
+                        existente.precio = precio; existente.stock = stock;
+                        if(base64Img) existente.imagen = base64Img; 
+                        db.transaction(["filtros"], "readwrite").objectStore("filtros").put(existente).onsuccess = () => { cerrarModales(); cargarTodo(); };
+                    } else {
+                        const nuevo = { id: Date.now(), codigo, tipo, precio, stock, compatibilidad: [car], vehiculos_str: `${car.marca} ${car.modelo}`, imagen: base64Img };
+                        db.transaction(["filtros"], "readwrite").objectStore("filtros").add(nuevo).onsuccess = () => { cerrarModales(); cargarTodo(); };
+                    }
+                }
+            });
+        }
+
+        function editarItem(store, id) {
+            editId = id; editStoreName = store;
+            if(store === 'productos') {
+                const p = tienda.find(x => x.id === id);
+                document.getElementById('mt_title').innerText = "Editar Artículo"; document.getElementById('t_nombre').value = p.nombre; document.getElementById('t_cat').value = p.categoria || ""; document.getElementById('t_precio').value = p.precio; document.getElementById('t_stock').value = p.stock; document.getElementById('t_vehiculos').value = p.vehiculos || ""; document.getElementById('t_img_input').value = "";
+                abrirModalTienda(true);
+            } else {
+                const f = filtrosDB.find(x => x.id === id);
+                document.getElementById('mf_title').innerText = "Editar Filtro"; document.getElementById('f_codigo').value = f.codigo; document.getElementById('f_tipo').value = f.tipo; document.getElementById('f_precio').value = f.precio; document.getElementById('f_stock').value = f.stock; document.getElementById('f_img_input').value = "";
+                if(f.compatibilidad.length > 0) { let c = f.compatibilidad[0]; document.getElementById('f_marca').value = c.marca; document.getElementById('f_modelo').value = c.modelo; document.getElementById('f_motor').value = c.motor; document.getElementById('f_cil').value = c.cil; document.getElementById('f_ano1').value = c.ano1; document.getElementById('f_ano2').value = c.ano2; }
+                abrirModalFiltro(true);
+            }
+        }
+                function editarVehiculo(car) {
+            // 1. Abrimos y limpiamos TODO primero
+            abrirModalFiltro(); 
             
-            calcularGranTotal();
+            // 2. Ahora sí, rellenamos los datos del vehículo automáticamente
+            editId = null; editStoreName = null; 
+            document.getElementById('mf_title').innerText = "Asignar Nuevo Filtro al Vehículo";
+            document.getElementById('f_marca').value = car.marca; 
+            document.getElementById('f_modelo').value = car.modelo; 
+            document.getElementById('f_motor').value = car.motor; 
+            document.getElementById('f_cil').value = car.cil; 
+            document.getElementById('f_ano1').value = car.ano1; 
+            document.getElementById('f_ano2').value = car.ano2;
         }
 
-        function calcularGranTotal() {
-            let total = 0;
-            for(let id in cantidades) {
-                // Buscar precio en el DOM para no recorrer array gigante
-                const card = document.getElementById(`card-${id}`);
-                if(card) total += parseFloat(card.dataset.price) * cantidades[id];
+        // --- FUNCIONES DE BORRADO ---
+        function borrarItem(store, id) { if(confirm("¿Eliminar permanentemente este ítem?")) { db.transaction([store], "readwrite").objectStore(store).delete(id).onsuccess = () => cargarTodo(); } }
+        function borrarVehiculoGlobal(carObj) {
+            if(confirm(`¿Eliminar el vehículo ${carObj.marca} ${carObj.modelo} de TODO el sistema?`)) {
+                let tx = db.transaction(["filtros"], "readwrite"); let store = tx.objectStore("filtros");
+                filtrosDB.forEach(f => {
+                    let count = f.compatibilidad.length;
+                    f.compatibilidad = f.compatibilidad.filter(c => !esMismoCarro(c, carObj));
+                    if(f.compatibilidad.length < count) { f.vehiculos_str = f.compatibilidad.map(c => `${c.marca} ${c.modelo}`).join(' '); store.put(f); }
+                });
+                tx.oncomplete = () => cargarTodo();
             }
-            document.getElementById('totalUsd').innerText = `$${total.toFixed(2)}`;
-            document.getElementById('totalBs').innerText = `Bs. ${ (total * tasa).toLocaleString('es-VE', {minimumFractionDigits: 2}) }`;
         }
-
-        function limpiarTodo() {
-            if(confirm("¿Vaciar?")) { 
-                cantidades = {}; 
-                renderizarInicial(); // Aquí sí reseteamos todo para limpiar visuales
+        function desvincularVehiculo(filtroId, carObj) {
+            if(confirm("¿Quitar este vehículo de la lista del filtro?")) {
+                let f = filtrosDB.find(x => x.id === filtroId);
+                f.compatibilidad = f.compatibilidad.filter(c => !esMismoCarro(c, carObj));
+                db.transaction(["filtros"], "readwrite").objectStore("filtros").put(f).onsuccess = () => cargarTodo();
             }
         }
 
-        // --- MODALES Y GUARDADO ---
-        function abrirModal() {
-            editId = null; imgComprimida = "";
-            document.getElementById('modalTitle').innerText = "Nuevo";
-            ['inpNombre', 'inpPrecio', 'inpCategoria', 'inpVehiculos', 'inpImgFile'].forEach(id => document.getElementById(id).value = "");
-            document.getElementById('previewImg').style.display = 'none';
-            document.getElementById('modalProducto').style.display = 'flex';
+        // --- UTILIDADES / UI ---
+        function processImage(file, maxDimension, quality, callback) {
+            if(!file) return callback(null);
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas'); let w = img.width, h = img.height;
+                    if (w > h) { if (w > maxDimension) { h *= maxDimension / w; w = maxDimension; } } else { if (h > maxDimension) { w *= maxDimension / h; h = maxDimension; } }
+                    canvas.width = w; canvas.height = h; canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                    callback(canvas.toDataURL('image/jpeg', quality));
+                }; img.src = e.target.result;
+            }; reader.readAsDataURL(file);
         }
-        function editar(id) {
-            const p = productos.find(x => x.id == id); if(!p) return;
-            editId = id; imgComprimida = p.img || "";
-            document.getElementById('modalTitle').innerText = "Editar";
-            document.getElementById('inpNombre').value = p.nombre;
-            document.getElementById('inpPrecio').value = p.precio;
-            document.getElementById('inpCategoria').value = p.categoria || "";
-            document.getElementById('inpVehiculos').value = p.vehiculos || "";
-            document.getElementById('inpImgFile').value = "";
-            const pv = document.getElementById('previewImg');
-            if(imgComprimida && imgComprimida.startsWith("data:")) { pv.src = imgComprimida; pv.style.display = 'block'; } 
-            else { pv.style.display = 'none'; }
-            document.getElementById('modalProducto').style.display = 'flex';
+        function updateCartUI(id, val, precio) { val = parseInt(val) || 0; const card = document.getElementById(`card-item-${id}`); const totalRow = document.getElementById(`total-row-${id}`);
+            if (val > 0) { carritoMap[id] = val; if(card) card.classList.add('active-item'); if(totalRow) { totalRow.classList.add('active'); totalRow.innerHTML = `$${(val * precio).toFixed(2)}<br>Bs. ${(val * precio * tasa).toFixed(2)}`; } } 
+            else { delete carritoMap[id]; if(card) card.classList.remove('active-item'); if(totalRow) { totalRow.classList.remove('active'); totalRow.innerHTML = `$0.00<br>Bs. 0.00`; } } calcularTotalBar();
         }
-        function cerrarModal() { document.getElementById('modalProducto').style.display = 'none'; }
+        function vaciarCarrito() { if(confirm("¿Vaciar carrito?")) { carritoMap = {}; filtrarStore(); } }
+        function calcularTotalBar() { let total = 0; for(let id in carritoMap) { let p = tienda.find(x => x.id == id); if(p) total += p.precio * carritoMap[id]; } document.getElementById('totalMonto').innerText = "$" + total.toFixed(2); document.getElementById('totalMontoBs').innerText = "Bs. " + (total * tasa).toFixed(2); }
+        
+        // --- EXPORTAR E IMPORTAR ---
+        function exportData() {
+            toggleMenu();
+            const data = { productos: tienda, filtros: filtrosDB, exportDate: new Date().toISOString() };
+            const dataStr = JSON.stringify(data);
+            const blob = new Blob([dataStr], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = `Stocktien_Backup_${new Date().toISOString().slice(0,10)}.json`;
+            document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+        }
+        function importData() { toggleMenu(); document.getElementById('import-file').click(); }
+        function handleImport(event) {
+            const file = event.target.files[0]; if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (!data.productos || !data.filtros) throw new Error("Archivo inválido");
+                    if (confirm(`Se importarán ${data.productos.length} productos y ${data.filtros.length} filtros. ¿Continuar? (Esto sobrescribirá los datos actuales)`)) {
+                        let tx = db.transaction(["productos", "filtros"], "readwrite");
+                        tx.objectStore("productos").clear(); tx.objectStore("filtros").clear();
+                        data.productos.forEach(p => tx.objectStore("productos").add(p));
+                        data.filtros.forEach(f => tx.objectStore("filtros").add(f));
+                        tx.oncomplete = () => { alert("¡Importación exitosa!"); cargarTodo(); };
+                    }
+                } catch (err) { alert("Error al importar: " + err.message); }
+                event.target.value = ""; 
+            }; reader.readAsText(file);
+        }
+
+        // --- AUXILIARES Y CONFIGURACIÓN (ARREGLO DE MODO OSCURO) ---
+        function esMismoCarro(c1, c2) { return c1.marca.toLowerCase()===c2.marca.toLowerCase() && c1.modelo.toLowerCase()===c2.modelo.toLowerCase() && c1.motor===c2.motor && c1.ano1==c2.ano1; }
+        function getVal(id) { return document.getElementById(id).value; }
+        function abrirModalTienda(isEdit=false) { document.getElementById('modalTienda').style.display='flex'; if(!isEdit){editId=null;editStoreName=null;document.getElementById('mt_title').innerText="Nuevo Artículo";document.querySelectorAll('#modalTienda input').forEach(i=>i.value="");document.getElementById('t_stock').value=1;}}
+        function abrirModalFiltro(isEdit=false) { document.getElementById('modalFiltro').style.display='flex'; if(!isEdit && !editId){editStoreName=null;document.getElementById('mf_title').innerText="Agregar Vehículo/Filtro";document.querySelectorAll('#modalFiltro input').forEach(i=>i.value="");document.getElementById('f_stock').value=1;}}
+        function cerrarModales() { document.querySelectorAll('.modal').forEach(m => m.style.display='none'); editId=null;editStoreName=null; }
+        function toggleMenu() { document.getElementById('sidebar').classList.toggle('open'); document.querySelector('.sidebar-overlay').style.display = document.getElementById('sidebar').classList.contains('open') ? 'block' : 'none'; }
+        function navTo(v) { document.querySelectorAll('.view-section').forEach(x => x.classList.remove('active-view')); document.getElementById('view-'+v).classList.add('active-view'); toggleMenu(); if(v==='store') filtrarStore(); if(v==='filtros') renderFiltrosView(); }
+        function actualizarTasa(v) { tasa = parseFloat(v) || 1; calcularTotalBar(); filtrarStore(); }
+        function abrirSettings() { toggleMenu(); document.getElementById('modalSettings').style.display='flex'; }
+        function setStockFilter(s) { filtroStockState=s; document.querySelectorAll('.stock-btn').forEach(b=>b.classList.remove('active-stock')); document.getElementById('btn-stock-'+(s=='todos'?'todos':(s=='disponibles'?'disp':'agot'))).classList.add('active-stock'); filtrarStore(); }
+        function setCategoryFilter(c) { categoriaActiva=c; filtrarStore(); }
+        
+        // EL ARREGLO DEL MODO OSCURO ESTÁ AQUÍ
+        function cargarConfig() { 
+            // 1. Primero poner la fuente
+            if(localStorage.getItem('fontSize')){
+                document.body.className=localStorage.getItem('fontSize');
+            } else {
+                document.body.className='font-m';
+            }
+            // 2. Luego poner el modo oscuro para que no se sobreescriba
+            if(localStorage.getItem('theme')==='dark'){
+                document.body.classList.add('dark-mode');
+                document.getElementById('chkDark').checked=true;
+            } 
+        }
+        function toggleDark(d) { 
+            document.body.classList.toggle('dark-mode',d); 
+            localStorage.setItem('theme',d?'dark':'light'); 
+        }
+        function setVisual(t,v) { 
+            if(t==='font'){
+                // Guardar si estaba en dark mode para no borrarlo
+                let isDark = document.body.classList.contains('dark-mode');
+                document.body.className=v;
+                if(isDark) document.body.classList.add('dark-mode');
+                localStorage.setItem('fontSize',v);
+            } 
+        }
+                // FUNCIÓN PARA AGRANDAR FOTO
         function verFoto(url) {
-            if(url.includes("placeholder")) return;
+            if(!url) return;
             document.getElementById('imgZoomDisplay').src = url;
             document.getElementById('modalZoom').style.display = 'flex';
         }
-        function cerrarZoom() { document.getElementById('modalZoom').style.display = 'none'; }
-
-        // COMPRESOR
-        document.getElementById('inpImgFile').addEventListener('change', function(e) {
-            const file = e.target.files[0]; if (!file) return;
-            document.getElementById('btnGuardar').innerText = "...";
-            document.getElementById('btnGuardar').disabled = true;
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                const img = new Image();
-                img.onload = function() {
-                    const canvas = document.getElementById('canvasCompress');
-                    const ctx = canvas.getContext('2d');
-                    const MAX_WIDTH = 500;
-                    const scaleSize = MAX_WIDTH / img.width;
-                    canvas.width = MAX_WIDTH;
-                    canvas.height = img.height * scaleSize;
-                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                    imgComprimida = canvas.toDataURL("image/jpeg", 0.7);
-                    const pv = document.getElementById('previewImg');
-                    pv.src = imgComprimida; pv.style.display = 'block';
-                    document.getElementById('btnGuardar').innerText = "Guardar";
-                    document.getElementById('btnGuardar').disabled = false;
-                }
-                img.src = event.target.result;
-            }
-            reader.readAsDataURL(file);
-        });
-
-        function guardarProducto() {
-            const nombre = document.getElementById('inpNombre').value;
-            const precio = parseFloat(document.getElementById('inpPrecio').value);
-            const cat = document.getElementById('inpCategoria').value; 
-            const veh = document.getElementById('inpVehiculos').value;
-            if (!nombre || isNaN(precio)) { alert("Falta datos"); return; }
-            const imgFinal = imgComprimida || (editId ? productos.find(p=>p.id==editId).img : "") || "";
-            const nuevoItem = { id: editId || Date.now(), nombre, precio, categoria: cat, vehiculos: veh, img: imgFinal };
-            
-            if (editId) {
-                const index = productos.findIndex(p => p.id == editId);
-                if(index !== -1) productos[index] = nuevoItem;
-            } else { productos.push(nuevoItem); }
-
-            guardarDatos(); renderizarCategorias(); cerrarModal(); 
-            renderizarInicial(); // Reconstruir DOM al guardar
-        }
-
-        function borrar(id) {
-            if(confirm("¿Borrar?")) {
-                productos = productos.filter(p => p.id != id);
-                delete cantidades[id];
-                guardarDatos(); renderizarCategorias(); 
-                // Eliminar del DOM directamente sin redibujar todo
-                const card = document.getElementById(`card-${id}`);
-                if(card) card.remove();
-                calcularGranTotal();
-            }
-        }
-
-        function menuExportar() {
-            const op = prompt("1. Exportar\n2. Importar");
-            if(op === "1") {
-                const a = document.createElement('a');
-                a.href = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(productos));
-                a.download = "respuestos_backup.json"; a.click();
-            } else if (op === "2") { document.getElementById('importInput').click(); }
-        }
-        function importarDatos(input) {
-            const file = input.files[0]; if(!file) return;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    productos = JSON.parse(e.target.result);
-                    productos.forEach(p => { if(!p.id) p.id = Date.now() + Math.random(); });
-                    guardarDatos(); renderizarCategorias(); renderizarInicial(); alert("✅ Cargado");
-                } catch(err) { alert("❌ Error archivo"); }
-            };
-            reader.readAsText(file);
-        }
+        
     </script>
 </body>
 </html>
+    
